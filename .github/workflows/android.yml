@@ -1,10 +1,10 @@
-name: Android CI
+name: Github pre-release
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: workflow_dispatch
+#   push:
+#     branches: [ master ]
+#   pull_request:
+#     branches: [ master ]
 
 jobs:
   build:
@@ -12,27 +12,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: set up JDK 11
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: set up JDK 1.8
       uses: actions/setup-java@v2
       with:
-        java-version: '11'
-        distribution: 'temurin'
-        cache: gradle
+        distribution: 'zulu'
+        java-version: '8'
 
     - name: Grant execute permission for gradlew
-      run: chmod +x ./gradlew
-    - name: Build with Gradle
-      run: ./gradlew build
+      run: chmod +x gradlew
+
+    - name: Build Github unsigned pre-release apk
+      run: ./gradlew assembleGithubRelease --stacktrace --project-prop pre --project-prop split
 
     - name: Get current date and time
       id: date
       run: echo "::set-output name=date::$(date +'%Y%m%d_%H%M%S')"
-    
-    # Create artifact    
+
+    # Create artifact
     - name: Create apk artifact
       uses: actions/upload-artifact@v2
       with:
-        name: barinsta_nightly_${{ steps.date.outputs.date }}
+        name: barinsta_pre-release_${{ steps.date.outputs.date }}
         # path: ${{steps.sign_app.outputs.signedReleaseFile}}
         path: app/build/outputs/apk/github/release/*.apk
